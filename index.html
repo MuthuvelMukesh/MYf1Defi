@@ -1,1 +1,648 @@
-this the front end is of the project 
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Midnight Blockchain: Hashes</title>
+		<style>
+			:root {
+				color-scheme: dark;
+				--bg: #0b0f17;
+				--panel: #121a2a;
+				--text: #e7eefc;
+				--muted: #b7c2d9;
+				--border: #23304a;
+				--accent: #7aa2ff;
+			}
+
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+			}
+
+			.wrap {
+				max-width: 900px;
+				margin: 48px auto;
+				padding: 0 16px;
+			}
+
+			h1 {
+				margin: 0 0 8px;
+				font-size: 22px;
+			}
+
+			p {
+				margin: 0 0 16px;
+				color: var(--muted);
+			}
+
+			.card {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 16px;
+			}
+
+			label {
+				display: block;
+				margin-bottom: 8px;
+				color: var(--muted);
+			}
+
+			textarea {
+				width: 100%;
+				min-height: 110px;
+				resize: vertical;
+				border-radius: 10px;
+				border: 1px solid var(--border);
+				background: #0d1424;
+				color: var(--text);
+				padding: 10px;
+				font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+				outline: none;
+
+			input[type='checkbox'] {
+				width: 14px;
+				height: 14px;
+				accent-color: var(--accent);
+			}
+			}
+
+			.row {
+				margin-top: 12px;
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 10px;
+			}
+
+			.out {
+				border-radius: 10px;
+				border: 1px solid var(--border);
+				background: #0d1424;
+				padding: 10px;
+				font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+				overflow: auto;
+			}
+
+			input[type='number'] {
+				width: 140px;
+				border-radius: 10px;
+				border: 1px solid var(--border);
+				background: #0d1424;
+				color: var(--text);
+				padding: 8px 10px;
+				outline: none;
+				font: 13px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+			}
+
+			.hint {
+				margin-top: 10px;
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			.hint b {
+				color: var(--accent);
+				font-weight: 600;
+			}
+
+			button {
+				appearance: none;
+				border: 1px solid var(--border);
+				background: #0d1424;
+				color: var(--text);
+				padding: 8px 10px;
+				border-radius: 10px;
+				cursor: pointer;
+				font: 13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+			}
+
+			button:hover {
+				border-color: #2f426a;
+			}
+
+			.pill {
+				display: inline-block;
+				padding: 2px 8px;
+				border-radius: 999px;
+				border: 1px solid var(--border);
+				background: #0d1424;
+				font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+			}
+
+			.ok {
+				color: #7dffb2;
+			}
+
+			.bad {
+				color: #ff8a8a;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<h1>Midnight Blockchain — Step 1: Hashes</h1>
+			<p>
+				A blockchain is built from one simple tool: a <b>hash</b> (a one-way fingerprint of data).
+				Change the input even a little — the fingerprint changes a lot.
+			</p>
+
+			<div class="card">
+				<label for="msg">Message (data we want to fingerprint)</label>
+				<textarea id="msg">Hello, midnight pair-programming.</textarea>
+
+				<div class="row">
+					<div>
+						<label>SHA-256 hash (fingerprint)</label>
+						<div id="hash" class="out" aria-live="polite"></div>
+					</div>
+				</div>
+
+				<div class="hint">
+					If the hash doesn’t update, you may be opening this file without a local server.
+					Try a simple server (e.g. <b>python -m http.server</b>) and open <b>http://localhost:8000</b>.
+				</div>
+			</div>
+
+			<div style="height: 16px"></div>
+
+			<div class="card">
+				<h2 style="margin: 0 0 8px; font-size: 16px">Step 2: A Block (data + prevHash)</h2>
+				<p style="margin: 0 0 14px; color: var(--muted)">
+					A block’s hash is a fingerprint of <b>its data</b> and the <b>previous block’s hash</b>.
+					That “prevHash” link is what makes a chain.
+				</p>
+
+				<label for="blockData">Block data</label>
+				<textarea id="blockData">Send 10 tokens to Ada.</textarea>
+
+				<div style="height: 10px"></div>
+
+				<label for="prevHash">Previous hash (what we chain to)</label>
+				<textarea id="prevHash" spellcheck="false">0000000000000000000000000000000000000000000000000000000000000000</textarea>
+
+				<div style="height: 10px"></div>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<span class="pill">Timestamp: <span id="timestamp">(loading)</span></span>
+					<button id="newTimestampBtn" type="button">New timestamp</button>
+				</div>
+
+				<div style="height: 10px"></div>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<label style="margin: 0">
+						Nonce
+						<input id="nonce" type="number" min="0" step="1" value="0" />
+					</label>
+					<label style="margin: 0">
+						Difficulty (leading zeros)
+						<input id="difficulty" type="number" min="0" max="8" step="1" value="3" />
+					</label>
+					<button id="mineBtn" type="button">Mine</button>
+					<button id="stopMineBtn" type="button" disabled>Stop</button>
+					<span class="pill">Attempts: <span id="attempts">0</span></span>
+				</div>
+
+				<div class="row">
+					<div>
+						<label>Block JSON (what we hash)</label>
+						<div id="blockJson" class="out"></div>
+					</div>
+					<div>
+						<label>Block hash</label>
+						<div id="blockHash" class="out" aria-live="polite"></div>
+					</div>
+				</div>
+
+				<div style="height: 10px"></div>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<button id="storeHashBtn" type="button">Store this hash</button>
+					<span class="pill">Stored hash: <span id="storedHash">(none)</span></span>
+					<span class="pill">Check: <span id="validity">(no stored hash)</span></span>
+				</div>
+
+				<div class="hint" style="margin-top: 10px">
+					Click <b>Store this hash</b>, then edit the block data. If the stored hash no longer matches the recomputed hash,
+					the block has been tampered with.
+				</div>
+			</div>
+
+			<div style="height: 16px"></div>
+
+			<div class="card">
+				<h2 style="margin: 0 0 8px; font-size: 16px">Step 3: Two Blocks = A Chain</h2>
+				<p style="margin: 0 0 14px; color: var(--muted)">
+					Block 2’s <b>prevHash</b> is Block 1’s hash. Change Block 1, and Block 2 instantly changes too.
+				</p>
+
+				<label for="block2Data">Block 2 data</label>
+				<textarea id="block2Data">Send 3 tokens to Grace.</textarea>
+
+				<div style="height: 10px"></div>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<span class="pill">Block 2 prevHash (auto): <span id="block2PrevHash">(loading)</span></span>
+					<span class="pill">Link: <span id="chainLink">(loading)</span></span>
+				</div>
+
+				<div style="height: 10px"></div>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<span class="pill">Block 2 timestamp: <span id="block2Timestamp">(loading)</span></span>
+					<button id="newBlock2TimestampBtn" type="button">New timestamp</button>
+					<label style="margin: 0">
+						Block 2 nonce
+						<input id="block2Nonce" type="number" min="0" step="1" value="0" />
+					</label>
+					<button id="mine2Btn" type="button">Mine Block 2</button>
+					<button id="stopMine2Btn" type="button" disabled>Stop</button>
+					<span class="pill">Attempts: <span id="attempts2">0</span></span>
+					<span class="pill">PoW: <span id="pow2">(loading)</span></span>
+				</div>
+
+				<div class="row" style="margin-top: 12px">
+					<div>
+						<label>Block 2 JSON (what we hash)</label>
+						<div id="block2Json" class="out"></div>
+					</div>
+					<div>
+						<label>Block 2 hash</label>
+						<div id="block2Hash" class="out" aria-live="polite"></div>
+					</div>
+				</div>
+			</div>
+
+			<div style="height: 16px"></div>
+
+			<div class="card">
+				<h2 style="margin: 0 0 8px; font-size: 16px">Step 4: Ledger View</h2>
+				<p style="margin: 0 0 14px; color: var(--muted)">
+					A blockchain is basically a ledger: a list of blocks plus rules for what “valid” means.
+				</p>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<span class="pill">Chain status: <span id="chainStatus">(loading)</span></span>
+					<span class="pill">
+						<label style="margin: 0; display: inline-flex; gap: 8px; align-items: center">
+							<input id="ruleLink" type="checkbox" checked />
+							require link
+						</label>
+					</span>
+					<span class="pill">
+						<label style="margin: 0; display: inline-flex; gap: 8px; align-items: center">
+							<input id="rulePow" type="checkbox" checked />
+							require PoW
+						</label>
+					</span>
+				</div>
+
+				<div style="height: 12px"></div>
+
+				<div class="row">
+					<div>
+						<label>Block 1 (hash)</label>
+						<div id="ledgerB1" class="out"></div>
+					</div>
+					<div>
+						<label>Block 2 (hash)</label>
+						<div id="ledgerB2" class="out"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const msgEl = document.getElementById('msg');
+			const hashEl = document.getElementById('hash');
+			const blockDataEl = document.getElementById('blockData');
+			const prevHashEl = document.getElementById('prevHash');
+			const blockJsonEl = document.getElementById('blockJson');
+			const blockHashEl = document.getElementById('blockHash');
+			const storeHashBtn = document.getElementById('storeHashBtn');
+			const storedHashEl = document.getElementById('storedHash');
+			const validityEl = document.getElementById('validity');
+			const timestampEl = document.getElementById('timestamp');
+			const newTimestampBtn = document.getElementById('newTimestampBtn');
+			const nonceEl = document.getElementById('nonce');
+			const difficultyEl = document.getElementById('difficulty');
+			const mineBtn = document.getElementById('mineBtn');
+			const stopMineBtn = document.getElementById('stopMineBtn');
+			const attemptsEl = document.getElementById('attempts');
+			const block2DataEl = document.getElementById('block2Data');
+			const block2PrevHashEl = document.getElementById('block2PrevHash');
+			const chainLinkEl = document.getElementById('chainLink');
+			const block2TimestampEl = document.getElementById('block2Timestamp');
+			const newBlock2TimestampBtn = document.getElementById('newBlock2TimestampBtn');
+			const block2NonceEl = document.getElementById('block2Nonce');
+			const block2JsonEl = document.getElementById('block2Json');
+			const block2HashEl = document.getElementById('block2Hash');
+			const mine2Btn = document.getElementById('mine2Btn');
+			const stopMine2Btn = document.getElementById('stopMine2Btn');
+			const attempts2El = document.getElementById('attempts2');
+			const pow2El = document.getElementById('pow2');
+			const chainStatusEl = document.getElementById('chainStatus');
+			const ledgerB1El = document.getElementById('ledgerB1');
+			const ledgerB2El = document.getElementById('ledgerB2');
+			const ruleLinkEl = document.getElementById('ruleLink');
+			const rulePowEl = document.getElementById('rulePow');
+
+			let storedBlockHash = '';
+			let blockTimestamp = new Date().toISOString();
+			let block2Timestamp = new Date().toISOString();
+			let mining = false;
+			let mining2 = false;
+			let attempts = 0;
+			let attempts2 = 0;
+			let lastBlock1Hash = '';
+
+			function bytesToHex(buffer) {
+				const bytes = new Uint8Array(buffer);
+				let hex = '';
+				for (const b of bytes) hex += b.toString(16).padStart(2, '0');
+				return hex;
+			}
+
+			async function sha256(text) {
+				const data = new TextEncoder().encode(text);
+				const digest = await crypto.subtle.digest('SHA-256', data);
+				return bytesToHex(digest);
+			}
+
+			function stableStringify(value) {
+				if (value === null || typeof value !== 'object') return JSON.stringify(value);
+				if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']';
+				const keys = Object.keys(value).sort();
+				const props = keys.map((k) => JSON.stringify(k) + ':' + stableStringify(value[k]));
+				return '{' + props.join(',') + '}';
+			}
+
+			async function refresh() {
+				try {
+					const text = msgEl.value;
+					const h = await sha256(text);
+					hashEl.textContent = h;
+
+					const nonce = Number(nonceEl.value) || 0;
+
+					const block = {
+						index: 1,
+						timestamp: blockTimestamp,
+						data: blockDataEl.value,
+						prevHash: prevHashEl.value.trim(),
+						nonce,
+					};
+
+					const blockJson = stableStringify(block);
+					blockJsonEl.textContent = blockJson;
+					const currentBlockHash = await sha256(blockJson);
+					blockHashEl.textContent = currentBlockHash;
+					  lastBlock1Hash = currentBlockHash;
+
+					timestampEl.textContent = blockTimestamp;
+					attemptsEl.textContent = String(attempts);
+					  attempts2El.textContent = String(attempts2);
+
+					storedHashEl.textContent = storedBlockHash ? storedBlockHash : '(none)';
+					if (!storedBlockHash) {
+						validityEl.textContent = '(no stored hash)';
+						validityEl.className = '';
+					} else if (storedBlockHash === currentBlockHash) {
+						validityEl.textContent = 'valid';
+						validityEl.className = 'ok';
+					} else {
+						validityEl.textContent = 'INVALID (tampered)';
+						validityEl.className = 'bad';
+					}
+
+					const block2PrevHash = lastBlock1Hash;
+					block2PrevHashEl.textContent = block2PrevHash || '(unknown)';
+
+					const block2 = {
+						index: 2,
+						timestamp: block2Timestamp,
+						data: block2DataEl.value,
+						prevHash: block2PrevHash,
+						nonce: Number(block2NonceEl.value) || 0,
+					};
+
+					block2TimestampEl.textContent = block2Timestamp;
+					const block2Json = stableStringify(block2);
+					block2JsonEl.textContent = block2Json;
+					const block2Hash = await sha256(block2Json);
+					block2HashEl.textContent = block2Hash;
+
+					const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
+					const prefix = '0'.repeat(difficulty);
+					const pow1Ok = currentBlockHash.startsWith(prefix);
+					const pow2Ok = block2Hash.startsWith(prefix);
+					if (block2Hash.startsWith(prefix)) {
+						pow2El.textContent = 'ok';
+						pow2El.className = 'ok';
+					} else {
+						pow2El.textContent = `need prefix ${prefix || '(none)'}`;
+						pow2El.className = 'bad';
+					}
+
+					if (block2.prevHash === lastBlock1Hash) {
+						chainLinkEl.textContent = 'linked';
+						chainLinkEl.className = 'ok';
+					} else {
+						chainLinkEl.textContent = 'BROKEN';
+						chainLinkEl.className = 'bad';
+					}
+
+					// Ledger summary
+					const linkedOk = block2.prevHash === currentBlockHash;
+					const requireLink = Boolean(ruleLinkEl.checked);
+					const requirePow = Boolean(rulePowEl.checked);
+
+					const b1PowText = pow1Ok ? 'ok' : `need prefix ${prefix || '(none)'}`;
+					const b2PowText = pow2Ok ? 'ok' : `need prefix ${prefix || '(none)'}`;
+					ledgerB1El.textContent = `${currentBlockHash}\nPoW: ${b1PowText}`;
+					ledgerB2El.textContent = `${block2Hash}\nprevHash: ${block2.prevHash}\nPoW: ${b2PowText}`;
+
+					const linkPass = !requireLink || linkedOk;
+					const powPass = !requirePow || (pow1Ok && pow2Ok);
+					if (linkPass && powPass) {
+						chainStatusEl.textContent = 'VALID';
+						chainStatusEl.className = 'ok';
+					} else {
+						const reasons = [
+							requireLink && !linkedOk ? 'broken link' : null,
+							requirePow && !pow1Ok ? 'block 1 not mined' : null,
+							requirePow && !pow2Ok ? 'block 2 not mined' : null,
+						].filter(Boolean);
+						chainStatusEl.textContent = `INVALID (${reasons.join(', ')})`;
+						chainStatusEl.className = 'bad';
+					}
+				} catch (err) {
+					hashEl.textContent = String(err);
+					blockHashEl.textContent = String(err);
+					validityEl.textContent = 'error';
+					validityEl.className = 'bad';
+					chainLinkEl.textContent = 'error';
+					chainLinkEl.className = 'bad';
+					block2HashEl.textContent = String(err);
+					pow2El.textContent = 'error';
+					pow2El.className = 'bad';
+					chainStatusEl.textContent = 'error';
+					chainStatusEl.className = 'bad';
+				}
+			}
+
+			async function currentBlock2Json() {
+				const block2 = {
+					index: 2,
+					timestamp: block2Timestamp,
+					data: block2DataEl.value,
+					prevHash: lastBlock1Hash,
+					nonce: Number(block2NonceEl.value) || 0,
+				};
+				return stableStringify(block2);
+			}
+
+			async function mine2() {
+				if (mining2) return;
+				mining2 = true;
+				mine2Btn.disabled = true;
+				stopMine2Btn.disabled = false;
+
+				attempts2 = 0;
+				const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
+				const prefix = '0'.repeat(difficulty);
+
+				try {
+					let nonce = Math.max(0, Number(block2NonceEl.value) || 0);
+					while (mining2) {
+						block2NonceEl.value = String(nonce);
+						const block2Json = await currentBlock2Json();
+						const h2 = await sha256(block2Json);
+						attempts2 += 1;
+
+						if (h2.startsWith(prefix)) break;
+
+						nonce += 1;
+
+						if (attempts2 % 200 === 0) {
+							await refresh();
+							await new Promise((r) => setTimeout(r, 0));
+						}
+					}
+				} finally {
+					mining2 = false;
+					mine2Btn.disabled = false;
+					stopMine2Btn.disabled = true;
+					await refresh();
+				}
+			}
+
+			async function currentBlockJson() {
+				const nonce = Number(nonceEl.value) || 0;
+				const block = {
+					index: 1,
+					timestamp: blockTimestamp,
+					data: blockDataEl.value,
+					prevHash: prevHashEl.value.trim(),
+					nonce,
+				};
+				return stableStringify(block);
+			}
+
+			async function mine() {
+				if (mining) return;
+				mining = true;
+				mineBtn.disabled = true;
+				stopMineBtn.disabled = false;
+
+				attempts = 0;
+				const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
+				const prefix = '0'.repeat(difficulty);
+
+				// Keep timestamp stable while mining.
+				blockTimestamp = blockTimestamp || new Date().toISOString();
+
+				try {
+					let nonce = Math.max(0, Number(nonceEl.value) || 0);
+					while (mining) {
+						nonceEl.value = String(nonce);
+						const blockJson = await currentBlockJson();
+						const h = await sha256(blockJson);
+						attempts += 1;
+
+						if (h.startsWith(prefix)) {
+							// Found a valid proof-of-work.
+							storedBlockHash = h;
+							break;
+						}
+
+						nonce += 1;
+
+						// Yield to keep the UI responsive.
+						if (attempts % 200 === 0) {
+							await refresh();
+							await new Promise((r) => setTimeout(r, 0));
+						}
+					}
+				} finally {
+					mining = false;
+					mineBtn.disabled = false;
+					stopMineBtn.disabled = true;
+					await refresh();
+				}
+			}
+
+			msgEl.addEventListener('input', refresh);
+			blockDataEl.addEventListener('input', refresh);
+			prevHashEl.addEventListener('input', refresh);
+			nonceEl.addEventListener('input', refresh);
+			difficultyEl.addEventListener('input', refresh);
+			block2DataEl.addEventListener('input', refresh);
+			block2NonceEl.addEventListener('input', refresh);
+			newTimestampBtn.addEventListener('click', () => {
+				blockTimestamp = new Date().toISOString();
+				attempts = 0;
+				storedBlockHash = '';
+				refresh();
+			});
+			newBlock2TimestampBtn.addEventListener('click', () => {
+				block2Timestamp = new Date().toISOString();
+				refresh();
+			});
+
+			ruleLinkEl.addEventListener('change', refresh);
+			rulePowEl.addEventListener('change', refresh);
+
+			mine2Btn.addEventListener('click', mine2);
+			stopMine2Btn.addEventListener('click', () => {
+				mining2 = false;
+			});
+			storeHashBtn.addEventListener('click', async () => {
+				try {
+					const block = {
+						index: 1,
+						timestamp: blockTimestamp,
+						data: blockDataEl.value,
+						prevHash: prevHashEl.value.trim(),
+						nonce: Number(nonceEl.value) || 0,
+					};
+					const blockJson = stableStringify(block);
+					storedBlockHash = await sha256(blockJson);
+					await refresh();
+				} catch {
+					// refresh() already shows errors
+					await refresh();
+				}
+			});
+
+			mineBtn.addEventListener('click', mine);
+			stopMineBtn.addEventListener('click', () => {
+				mining = false;
+			});
+			refresh();
+		</script>
+	</body>
+</html>
