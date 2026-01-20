@@ -364,6 +364,8 @@
 					<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
 						<span class="pill">Main chain total work: <span id="mainChainLen">0</span></span>
 						<span class="pill">Fork chain total work: <span id="forkChainLen">0</span></span>
+						<span class="pill">Main breakdown: <span id="mainWorkBreakdown">(loading)</span></span>
+						<span class="pill">Fork breakdown: <span id="forkWorkBreakdown">(loading)</span></span>
 						<span class="pill">Winner: <span id="winner">(loading)</span></span>
 					</div>
 
@@ -493,6 +495,8 @@
 			const pow2AltEl = document.getElementById('pow2Alt');
 			const mainChainLenEl = document.getElementById('mainChainLen');
 			const forkChainLenEl = document.getElementById('forkChainLen');
+			const mainWorkBreakdownEl = document.getElementById('mainWorkBreakdown');
+			const forkWorkBreakdownEl = document.getElementById('forkWorkBreakdown');
 			const winnerEl = document.getElementById('winner');
 			const block3DataEl = document.getElementById('block3Data');
 			const block3TimestampEl = document.getElementById('block3Timestamp');
@@ -750,16 +754,19 @@
 						const main3Valid = main2Valid && (!requireLink || block3.prevHash === block2Hash) && (!requirePow || pow3Ok);
 						const fork3Valid = fork2Valid && (!requireLink || block3Alt.prevHash === block2AltHash) && (!requirePow || pow3AltOk);
 
-						const baseWork = leadingZeroWork(currentBlockHash);
-						const mainWork = main2Valid
-							? baseWork + leadingZeroWork(block2Hash) + (main3Valid ? leadingZeroWork(block3Hash) : 0)
-							: 0;
-						const forkWork = fork2Valid
-							? baseWork + leadingZeroWork(block2AltHash) + (fork3Valid ? leadingZeroWork(block3AltHash) : 0)
-							: 0;
+						const b1Work = leadingZeroWork(currentBlockHash);
+						const b2Work = main2Valid ? leadingZeroWork(block2Hash) : 0;
+						const b3Work = main3Valid ? leadingZeroWork(block3Hash) : 0;
+						const b2AltWork = fork2Valid ? leadingZeroWork(block2AltHash) : 0;
+						const b3AltWork = fork3Valid ? leadingZeroWork(block3AltHash) : 0;
+
+						const mainWork = main2Valid ? b1Work + b2Work + b3Work : 0;
+						const forkWork = fork2Valid ? b1Work + b2AltWork + b3AltWork : 0;
 
 						mainChainLenEl.textContent = String(mainWork);
 						forkChainLenEl.textContent = String(forkWork);
+						mainWorkBreakdownEl.textContent = mainWork ? `B1=${b1Work} + B2=${b2Work} + B3=${b3Work}` : '(invalid)';
+						forkWorkBreakdownEl.textContent = forkWork ? `B1=${b1Work} + B2'=${b2AltWork} + B3'=${b3AltWork}` : '(invalid)';
 
 						if (mainWork > forkWork) {
 							winnerEl.textContent = 'main chain';
@@ -781,6 +788,8 @@
 						forkChainLenEl.textContent = '0';
 						winnerEl.textContent = '(create fork)';
 						winnerEl.className = '';
+						mainWorkBreakdownEl.textContent = '(create fork)';
+						forkWorkBreakdownEl.textContent = '(create fork)';
 					}
 				} catch (err) {
 					hashEl.textContent = String(err);
@@ -796,6 +805,8 @@
 					chainStatusEl.className = 'bad';
 					winnerEl.textContent = 'error';
 					winnerEl.className = 'bad';
+					mainWorkBreakdownEl.textContent = 'error';
+					forkWorkBreakdownEl.textContent = 'error';
 				}
 			}
 
