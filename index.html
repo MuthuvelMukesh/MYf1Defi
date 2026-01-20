@@ -371,6 +371,7 @@
 
 					<div class="hint" style="margin-top: 10px">
 						Both chains share Block 1. If both sides do the same total work, we have a tie.
+						Here, <b>work</b> = number of leading <b>"0"</b> hex characters in a block hash.
 						In a real network, the next block (3 or 3') usually breaks the tie.
 					</div>
 
@@ -649,17 +650,17 @@
 					block3HashEl.textContent = block3Hash;
 					const pow3Ok = block3Hash.startsWith(prefix);
 					if (pow3Ok) {
-						pow3El.textContent = 'ok';
+						pow3El.textContent = `ok (work=${leadingZeroWork(block3Hash)})`;
 						pow3El.className = 'ok';
 					} else {
-						pow3El.textContent = `need prefix ${prefix || '(none)'}`;
+						pow3El.textContent = `need prefix ${prefix || '(none)'} (work=${leadingZeroWork(block3Hash)})`;
 						pow3El.className = 'bad';
 					}
 					if (block2Hash.startsWith(prefix)) {
-						pow2El.textContent = 'ok';
+						pow2El.textContent = `ok (work=${leadingZeroWork(block2Hash)})`;
 						pow2El.className = 'ok';
 					} else {
-						pow2El.textContent = `need prefix ${prefix || '(none)'}`;
+						pow2El.textContent = `need prefix ${prefix || '(none)'} (work=${leadingZeroWork(block2Hash)})`;
 						pow2El.className = 'bad';
 					}
 
@@ -676,10 +677,12 @@
 					const requireLink = Boolean(ruleLinkEl.checked);
 					const requirePow = Boolean(rulePowEl.checked);
 
+					const b1WorkNow = leadingZeroWork(currentBlockHash);
+					const b2WorkNow = leadingZeroWork(block2Hash);
 					const b1PowText = pow1Ok ? 'ok' : `need prefix ${prefix || '(none)'}`;
 					const b2PowText = pow2Ok ? 'ok' : `need prefix ${prefix || '(none)'}`;
-					ledgerB1El.textContent = `${currentBlockHash}\nPoW: ${b1PowText}`;
-					ledgerB2El.textContent = `${block2Hash}\nprevHash: ${block2.prevHash}\nPoW: ${b2PowText}`;
+					ledgerB1El.textContent = `${currentBlockHash}\nwork: ${b1WorkNow}\nPoW: ${b1PowText}`;
+					ledgerB2El.textContent = `${block2Hash}\nwork: ${b2WorkNow}\nprevHash: ${block2.prevHash}\nPoW: ${b2PowText}`;
 
 					const linkPass = !requireLink || linkedOk;
 					const powPass = !requirePow || (pow1Ok && pow2Ok);
@@ -719,10 +722,10 @@
 
 						const pow2AltOk = block2AltHash.startsWith(prefix);
 						if (pow2AltOk) {
-							pow2AltEl.textContent = 'ok';
+							pow2AltEl.textContent = `ok (work=${leadingZeroWork(block2AltHash)})`;
 							pow2AltEl.className = 'ok';
 						} else {
-							pow2AltEl.textContent = `need prefix ${prefix || '(none)'}`;
+							pow2AltEl.textContent = `need prefix ${prefix || '(none)'} (work=${leadingZeroWork(block2AltHash)})`;
 							pow2AltEl.className = 'bad';
 						}
 
@@ -741,10 +744,10 @@
 						block3AltHashEl.textContent = block3AltHash;
 						const pow3AltOk = block3AltHash.startsWith(prefix);
 						if (pow3AltOk) {
-							pow3AltEl.textContent = 'ok';
+							pow3AltEl.textContent = `ok (work=${leadingZeroWork(block3AltHash)})`;
 							pow3AltEl.className = 'ok';
 						} else {
-							pow3AltEl.textContent = `need prefix ${prefix || '(none)'}`;
+							pow3AltEl.textContent = `need prefix ${prefix || '(none)'} (work=${leadingZeroWork(block3AltHash)})`;
 							pow3AltEl.className = 'bad';
 						}
 
