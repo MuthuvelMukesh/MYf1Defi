@@ -362,14 +362,14 @@
 					<div style="height: 12px"></div>
 
 					<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
-						<span class="pill">Main chain (Block 1 → 2): length=<span id="mainChainLen">2</span></span>
-						<span class="pill">Fork chain (Block 1 → 2'): length=<span id="forkChainLen">2</span></span>
+						<span class="pill">Main chain (Block 1 → 2): work=<span id="mainChainLen">0</span></span>
+						<span class="pill">Fork chain (Block 1 → 2'): work=<span id="forkChainLen">0</span></span>
 						<span class="pill">Winner: <span id="winner">(loading)</span></span>
 					</div>
 
 					<div class="hint" style="margin-top: 10px">
-						Both chains share Block 1. If both Block 2 and Block 2' are mined, we have a tie (same length). 
-						In a real network, the next block (3 or 3') would break the tie.
+						Both chains share Block 1. If both sides do the same total work, we have a tie.
+						In a real network, the next block (3 or 3') usually breaks the tie.
 					</div>
 
 					<div style="height: 14px"></div>
@@ -557,6 +557,17 @@
 				return '{' + props.join(',') + '}';
 			}
 
+			function leadingZeroWork(hexHash) {
+				// Simple “work” proxy: count of leading '0' hex chars.
+				// More zeros => rarer => more work.
+				let count = 0;
+				for (const ch of hexHash) {
+					if (ch !== '0') break;
+					count += 1;
+				}
+				return count;
+			}
+
 			async function refresh() {
 				try {
 					const text = msgEl.value;
@@ -733,35 +744,41 @@
 							pow3AltEl.className = 'bad';
 						}
 
-						// Chain length + winner
+						// Winner by total work (not just length)
 						const main2Valid = (!requireLink || linkedOk) && (!requirePow || (pow1Ok && pow2Ok));
 						const fork2Valid = (!requireLink || block2Alt.prevHash === currentBlockHash) && (!requirePow || (pow1Ok && pow2AltOk));
 						const main3Valid = main2Valid && (!requireLink || block3.prevHash === block2Hash) && (!requirePow || pow3Ok);
 						const fork3Valid = fork2Valid && (!requireLink || block3Alt.prevHash === block2AltHash) && (!requirePow || pow3AltOk);
 
-						const mainLen = main3Valid ? 3 : main2Valid ? 2 : 1;
-						const forkLen = fork3Valid ? 3 : fork2Valid ? 2 : 1;
-						mainChainLenEl.textContent = String(mainLen);
-						forkChainLenEl.textContent = String(forkLen);
+						const baseWork = leadingZeroWork(currentBlockHash);
+						const mainWork = main2Valid
+							? baseWork + leadingZeroWork(block2Hash) + (main3Valid ? leadingZeroWork(block3Hash) : 0)
+							: 0;
+						const forkWork = fork2Valid
+							? baseWork + leadingZeroWork(block2AltHash) + (fork3Valid ? leadingZeroWork(block3AltHash) : 0)
+							: 0;
 
-						if (mainLen > forkLen) {
+						mainChainLenEl.textContent = String(mainWork);
+						forkChainLenEl.textContent = String(forkWork);
+
+						if (mainWork > forkWork) {
 							winnerEl.textContent = 'main chain';
 							winnerEl.className = 'ok';
-						} else if (forkLen > mainLen) {
+						} else if (forkWork > mainWork) {
 							winnerEl.textContent = 'fork chain';
 							winnerEl.className = 'ok';
-						} else if (mainLen === 1 && forkLen === 1) {
+						} else if (mainWork === 0 && forkWork === 0) {
 							winnerEl.textContent = 'none (both invalid)';
 							winnerEl.className = 'bad';
 						} else {
-							winnerEl.textContent = 'tie (same length)';
+							winnerEl.textContent = 'tie (same work)';
 							winnerEl.className = '';
 						}
 					} else {
 						forkStatusEl.textContent = 'no fork';
 						forkStatusEl.className = '';
-						mainChainLenEl.textContent = '2';
-						forkChainLenEl.textContent = '2';
+						mainChainLenEl.textContent = '0';
+						forkChainLenEl.textContent = '0';
 						winnerEl.textContent = '(create fork)';
 						winnerEl.className = '';
 					}

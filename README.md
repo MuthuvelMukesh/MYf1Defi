@@ -79,17 +79,17 @@ Try toggling rules to see how “valid chain” depends on the rule set.
 
 Create a fork (an alternate Block 2′) that also points to Block 1.
 
-- Now you have two competing chains with the same length
-- When both are valid, the demo shows a tie
+- Now you have two competing chains
+- The demo picks a winner using a simple “most total work” idea (more leading zeros across blocks)
 
-In real blockchains, the tie gets broken when the next block arrives (making one chain longer / more work).
+In real blockchains, ties get broken when the next block arrives and one side accumulates more total work.
 
 ### Step 6: Break the tie (Block 3 vs Block 3′)
 
 Mine the next block on one side of the fork.
 
-- If the main chain has Block 3 and the fork doesn’t, main wins (longer chain)
-- If the fork has Block 3′ and the main doesn’t, the fork wins
+- If the main chain mines Block 3 first, main tends to win (more work)
+- If the fork mines Block 3′ first, the fork tends to win
 
 ## Next ideas (optional)
 
