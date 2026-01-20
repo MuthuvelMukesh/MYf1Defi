@@ -2,7 +2,7 @@
 
 Small midnight-friendly blockchain playground in a single HTML file.
 
-The goal is to learn the core building blocks (hashes → blocks → chaining → tamper detection → proof-of-work) with tiny, readable changes.
+The goal is to learn the core building blocks (hashes → blocks → chaining → tamper detection → proof-of-work → forks/consensus) with tiny, readable changes.
 
 ## What’s in here
 
@@ -75,8 +75,17 @@ The ledger summarizes the chain and checks validity under simple rules:
 
 Try toggling rules to see how “valid chain” depends on the rule set.
 
+### Step 5: Consensus (Fork Demo)
+
+Create a fork (an alternate Block 2′) that also points to Block 1.
+
+- Now you have two competing chains with the same length
+- When both are valid, the demo shows a tie
+
+In real blockchains, the tie gets broken when the next block arrives (making one chain longer / more work).
+
 ## Next ideas (optional)
 
-- Add a third block to show longer re-mining cascades
+- Add a third block to break fork ties (3 vs 3′)
 - Add transactions as an array and hash the Merkle root (later)
-- Add a very small “consensus” simulation (longest chain / most work)
+- Add a “total work” score (not just length)

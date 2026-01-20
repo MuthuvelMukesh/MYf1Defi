@@ -313,6 +313,66 @@
 					</div>
 				</div>
 			</div>
+
+			<div style="height: 16px"></div>
+
+			<div class="card">
+				<h2 style="margin: 0 0 8px; font-size: 16px">Step 5: Consensus (Fork Demo)</h2>
+				<p style="margin: 0 0 14px; color: var(--muted)">
+					Real blockchains can have competing chains (forks). The "longest chain" or "most work" rule decides which one is canonical.
+				</p>
+
+				<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+					<button id="forkBtn" type="button">Create Fork (Block 2')</button>
+					<span class="pill">Fork status: <span id="forkStatus">no fork</span></span>
+				</div>
+
+				<div style="height: 12px"></div>
+
+				<div id="forkContainer" style="display: none">
+					<label for="block2AltData">Block 2' (alternate) data</label>
+					<textarea id="block2AltData">Send 5 tokens to Bob.</textarea>
+
+					<div style="height: 10px"></div>
+
+					<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+						<span class="pill">Block 2' timestamp: <span id="block2AltTimestamp">(loading)</span></span>
+						<button id="newBlock2AltTimestampBtn" type="button">New timestamp</button>
+						<label style="margin: 0">
+							Block 2' nonce
+							<input id="block2AltNonce" type="number" min="0" step="1" value="0" />
+						</label>
+						<button id="mine2AltBtn" type="button">Mine Block 2'</button>
+						<button id="stopMine2AltBtn" type="button" disabled>Stop</button>
+						<span class="pill">Attempts: <span id="attempts2Alt">0</span></span>
+						<span class="pill">PoW: <span id="pow2Alt">(loading)</span></span>
+					</div>
+
+					<div class="row" style="margin-top: 12px">
+						<div>
+							<label>Block 2' JSON</label>
+							<div id="block2AltJson" class="out"></div>
+						</div>
+						<div>
+							<label>Block 2' hash</label>
+							<div id="block2AltHash" class="out" aria-live="polite"></div>
+						</div>
+					</div>
+
+					<div style="height: 12px"></div>
+
+					<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+						<span class="pill">Main chain (Block 1 → 2): length=<span id="mainChainLen">2</span></span>
+						<span class="pill">Fork chain (Block 1 → 2'): length=<span id="forkChainLen">2</span></span>
+						<span class="pill">Winner: <span id="winner">(loading)</span></span>
+					</div>
+
+					<div class="hint" style="margin-top: 10px">
+						Both chains share Block 1. If both Block 2 and Block 2' are mined, we have a tie (same length). 
+						In a real network, the next block (3 or 3') would break the tie.
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<script>
@@ -349,15 +409,35 @@
 			const ledgerB2El = document.getElementById('ledgerB2');
 			const ruleLinkEl = document.getElementById('ruleLink');
 			const rulePowEl = document.getElementById('rulePow');
+			const forkBtn = document.getElementById('forkBtn');
+			const forkStatusEl = document.getElementById('forkStatus');
+			const forkContainer = document.getElementById('forkContainer');
+			const block2AltDataEl = document.getElementById('block2AltData');
+			const block2AltTimestampEl = document.getElementById('block2AltTimestamp');
+			const newBlock2AltTimestampBtn = document.getElementById('newBlock2AltTimestampBtn');
+			const block2AltNonceEl = document.getElementById('block2AltNonce');
+			const block2AltJsonEl = document.getElementById('block2AltJson');
+			const block2AltHashEl = document.getElementById('block2AltHash');
+			const mine2AltBtn = document.getElementById('mine2AltBtn');
+			const stopMine2AltBtn = document.getElementById('stopMine2AltBtn');
+			const attempts2AltEl = document.getElementById('attempts2Alt');
+			const pow2AltEl = document.getElementById('pow2Alt');
+			const mainChainLenEl = document.getElementById('mainChainLen');
+			const forkChainLenEl = document.getElementById('forkChainLen');
+			const winnerEl = document.getElementById('winner');
 
 			let storedBlockHash = '';
 			let blockTimestamp = new Date().toISOString();
 			let block2Timestamp = new Date().toISOString();
+			let block2AltTimestamp = new Date().toISOString();
 			let mining = false;
 			let mining2 = false;
+			let mining2Alt = false;
 			let attempts = 0;
 			let attempts2 = 0;
+			let attempts2Alt = 0;
 			let lastBlock1Hash = '';
+			let forkActive = false;
 
 			function bytesToHex(buffer) {
 				const bytes = new Uint8Array(buffer);
@@ -479,6 +559,59 @@
 						chainStatusEl.textContent = `INVALID (${reasons.join(', ')})`;
 						chainStatusEl.className = 'bad';
 					}
+
+					// Fork logic
+					if (forkActive) {
+						forkStatusEl.textContent = 'active';
+						forkStatusEl.className = 'ok';
+						attempts2AltEl.textContent = String(attempts2Alt);
+
+						const block2Alt = {
+							index: 2,
+							timestamp: block2AltTimestamp,
+							data: block2AltDataEl.value,
+							prevHash: lastBlock1Hash,
+							nonce: Number(block2AltNonceEl.value) || 0,
+						};
+
+						block2AltTimestampEl.textContent = block2AltTimestamp;
+						const block2AltJson = stableStringify(block2Alt);
+						block2AltJsonEl.textContent = block2AltJson;
+						const block2AltHash = await sha256(block2AltJson);
+						block2AltHashEl.textContent = block2AltHash;
+
+						const pow2AltOk = block2AltHash.startsWith(prefix);
+						if (pow2AltOk) {
+							pow2AltEl.textContent = 'ok';
+							pow2AltEl.className = 'ok';
+						} else {
+							pow2AltEl.textContent = `need prefix ${prefix || '(none)'}`;
+							pow2AltEl.className = 'bad';
+						}
+
+						mainChainLenEl.textContent = '2';
+						forkChainLenEl.textContent = '2';
+
+						const mainValid = (!requireLink || linkedOk) && (!requirePow || (pow1Ok && pow2Ok));
+						const forkValid = (!requireLink || block2Alt.prevHash === currentBlockHash) && (!requirePow || (pow1Ok && pow2AltOk));
+
+						if (!mainValid && !forkValid) {
+							winnerEl.textContent = 'none (both invalid)';
+							winnerEl.className = 'bad';
+						} else if (mainValid && !forkValid) {
+							winnerEl.textContent = 'main chain';
+							winnerEl.className = 'ok';
+						} else if (!mainValid && forkValid) {
+							winnerEl.textContent = 'fork chain';
+							winnerEl.className = 'ok';
+						} else {
+							winnerEl.textContent = 'tie (same length)';
+							winnerEl.className = '';
+						}
+					} else {
+						forkStatusEl.textContent = 'no fork';
+						forkStatusEl.className = '';
+					}
 				} catch (err) {
 					hashEl.textContent = String(err);
 					blockHashEl.textContent = String(err);
@@ -536,6 +669,52 @@
 					mining2 = false;
 					mine2Btn.disabled = false;
 					stopMine2Btn.disabled = true;
+					await refresh();
+				}
+			}
+
+			async function currentBlock2AltJson() {
+				const block2Alt = {
+					index: 2,
+					timestamp: block2AltTimestamp,
+					data: block2AltDataEl.value,
+					prevHash: lastBlock1Hash,
+					nonce: Number(block2AltNonceEl.value) || 0,
+				};
+				return stableStringify(block2Alt);
+			}
+
+			async function mine2Alt() {
+				if (mining2Alt) return;
+				mining2Alt = true;
+				mine2AltBtn.disabled = true;
+				stopMine2AltBtn.disabled = false;
+
+				attempts2Alt = 0;
+				const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
+				const prefix = '0'.repeat(difficulty);
+
+				try {
+					let nonce = Math.max(0, Number(block2AltNonceEl.value) || 0);
+					while (mining2Alt) {
+						block2AltNonceEl.value = String(nonce);
+						const block2AltJson = await currentBlock2AltJson();
+						const h2Alt = await sha256(block2AltJson);
+						attempts2Alt += 1;
+
+						if (h2Alt.startsWith(prefix)) break;
+
+						nonce += 1;
+
+						if (attempts2Alt % 200 === 0) {
+							await refresh();
+							await new Promise((r) => setTimeout(r, 0));
+						}
+					}
+				} finally {
+					mining2Alt = false;
+					mine2AltBtn.disabled = false;
+					stopMine2AltBtn.disabled = true;
 					await refresh();
 				}
 			}
@@ -615,6 +794,28 @@
 
 			ruleLinkEl.addEventListener('change', refresh);
 			rulePowEl.addEventListener('change', refresh);
+
+			forkBtn.addEventListener('click', () => {
+				if (!forkActive) {
+					forkActive = true;
+					block2AltTimestamp = new Date().toISOString();
+					forkContainer.style.display = 'block';
+					refresh();
+				}
+			});
+
+			block2AltDataEl.addEventListener('input', refresh);
+			block2AltNonceEl.addEventListener('input', refresh);
+
+			newBlock2AltTimestampBtn.addEventListener('click', () => {
+				block2AltTimestamp = new Date().toISOString();
+				refresh();
+			});
+
+			mine2AltBtn.addEventListener('click', mine2Alt);
+			stopMine2AltBtn.addEventListener('click', () => {
+				mining2Alt = false;
+			});
 
 			mine2Btn.addEventListener('click', mine2);
 			stopMine2Btn.addEventListener('click', () => {
