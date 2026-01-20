@@ -84,8 +84,15 @@ Create a fork (an alternate Block 2′) that also points to Block 1.
 
 In real blockchains, the tie gets broken when the next block arrives (making one chain longer / more work).
 
+### Step 6: Break the tie (Block 3 vs Block 3′)
+
+Mine the next block on one side of the fork.
+
+- If the main chain has Block 3 and the fork doesn’t, main wins (longer chain)
+- If the fork has Block 3′ and the main doesn’t, the fork wins
+
 ## Next ideas (optional)
 
-- Add a third block to break fork ties (3 vs 3′)
+- Replace “length” with “total work” (more realistic than longest-chain-by-count)
 - Add transactions as an array and hash the Merkle root (later)
 - Add a “total work” score (not just length)

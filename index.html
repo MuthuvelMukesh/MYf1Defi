@@ -371,6 +371,75 @@
 						Both chains share Block 1. If both Block 2 and Block 2' are mined, we have a tie (same length). 
 						In a real network, the next block (3 or 3') would break the tie.
 					</div>
+
+					<div style="height: 14px"></div>
+
+					<h3 style="margin: 0 0 8px; font-size: 14px; color: var(--muted)">Tie-breaker: next block (3 vs 3')</h3>
+					<p style="margin: 0 0 12px; color: var(--muted)">
+						Mine Block 3 on one chain to make it longer.
+					</p>
+
+					<div class="row">
+						<div>
+							<label for="block3Data">Main chain: Block 3 data</label>
+							<textarea id="block3Data">Main chain block 3.</textarea>
+
+							<div style="height: 10px"></div>
+							<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+								<span class="pill">Block 3 timestamp: <span id="block3Timestamp">(loading)</span></span>
+								<button id="newBlock3TimestampBtn" type="button">New timestamp</button>
+								<label style="margin: 0">
+									Block 3 nonce
+									<input id="block3Nonce" type="number" min="0" step="1" value="0" />
+								</label>
+								<button id="mine3Btn" type="button">Mine Block 3</button>
+								<button id="stopMine3Btn" type="button" disabled>Stop</button>
+								<span class="pill">Attempts: <span id="attempts3">0</span></span>
+								<span class="pill">PoW: <span id="pow3">(loading)</span></span>
+							</div>
+
+							<div class="row" style="margin-top: 12px">
+								<div>
+									<label>Block 3 JSON</label>
+									<div id="block3Json" class="out"></div>
+								</div>
+								<div>
+									<label>Block 3 hash</label>
+									<div id="block3Hash" class="out" aria-live="polite"></div>
+								</div>
+							</div>
+						</div>
+
+						<div>
+							<label for="block3AltData">Fork chain: Block 3' data</label>
+							<textarea id="block3AltData">Fork chain block 3'.</textarea>
+
+							<div style="height: 10px"></div>
+							<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+								<span class="pill">Block 3' timestamp: <span id="block3AltTimestamp">(loading)</span></span>
+								<button id="newBlock3AltTimestampBtn" type="button">New timestamp</button>
+								<label style="margin: 0">
+									Block 3' nonce
+									<input id="block3AltNonce" type="number" min="0" step="1" value="0" />
+								</label>
+								<button id="mine3AltBtn" type="button">Mine Block 3'</button>
+								<button id="stopMine3AltBtn" type="button" disabled>Stop</button>
+								<span class="pill">Attempts: <span id="attempts3Alt">0</span></span>
+								<span class="pill">PoW: <span id="pow3Alt">(loading)</span></span>
+							</div>
+
+							<div class="row" style="margin-top: 12px">
+								<div>
+									<label>Block 3' JSON</label>
+									<div id="block3AltJson" class="out"></div>
+								</div>
+								<div>
+									<label>Block 3' hash</label>
+									<div id="block3AltHash" class="out" aria-live="polite"></div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -425,18 +494,46 @@
 			const mainChainLenEl = document.getElementById('mainChainLen');
 			const forkChainLenEl = document.getElementById('forkChainLen');
 			const winnerEl = document.getElementById('winner');
+			const block3DataEl = document.getElementById('block3Data');
+			const block3TimestampEl = document.getElementById('block3Timestamp');
+			const newBlock3TimestampBtn = document.getElementById('newBlock3TimestampBtn');
+			const block3NonceEl = document.getElementById('block3Nonce');
+			const mine3Btn = document.getElementById('mine3Btn');
+			const stopMine3Btn = document.getElementById('stopMine3Btn');
+			const attempts3El = document.getElementById('attempts3');
+			const pow3El = document.getElementById('pow3');
+			const block3JsonEl = document.getElementById('block3Json');
+			const block3HashEl = document.getElementById('block3Hash');
+			const block3AltDataEl = document.getElementById('block3AltData');
+			const block3AltTimestampEl = document.getElementById('block3AltTimestamp');
+			const newBlock3AltTimestampBtn = document.getElementById('newBlock3AltTimestampBtn');
+			const block3AltNonceEl = document.getElementById('block3AltNonce');
+			const mine3AltBtn = document.getElementById('mine3AltBtn');
+			const stopMine3AltBtn = document.getElementById('stopMine3AltBtn');
+			const attempts3AltEl = document.getElementById('attempts3Alt');
+			const pow3AltEl = document.getElementById('pow3Alt');
+			const block3AltJsonEl = document.getElementById('block3AltJson');
+			const block3AltHashEl = document.getElementById('block3AltHash');
 
 			let storedBlockHash = '';
 			let blockTimestamp = new Date().toISOString();
 			let block2Timestamp = new Date().toISOString();
 			let block2AltTimestamp = new Date().toISOString();
+			let block3Timestamp = new Date().toISOString();
+			let block3AltTimestamp = new Date().toISOString();
 			let mining = false;
 			let mining2 = false;
 			let mining2Alt = false;
+			let mining3 = false;
+			let mining3Alt = false;
 			let attempts = 0;
 			let attempts2 = 0;
 			let attempts2Alt = 0;
+			let attempts3 = 0;
+			let attempts3Alt = 0;
 			let lastBlock1Hash = '';
+			let lastBlock2Hash = '';
+			let lastBlock2AltHash = '';
 			let forkActive = false;
 
 			function bytesToHex(buffer) {
@@ -480,11 +577,13 @@
 					blockJsonEl.textContent = blockJson;
 					const currentBlockHash = await sha256(blockJson);
 					blockHashEl.textContent = currentBlockHash;
-					  lastBlock1Hash = currentBlockHash;
+					lastBlock1Hash = currentBlockHash;
 
 					timestampEl.textContent = blockTimestamp;
 					attemptsEl.textContent = String(attempts);
-					  attempts2El.textContent = String(attempts2);
+					attempts2El.textContent = String(attempts2);
+					attempts3El.textContent = String(attempts3);
+					attempts3AltEl.textContent = String(attempts3Alt);
 
 					storedHashEl.textContent = storedBlockHash ? storedBlockHash : '(none)';
 					if (!storedBlockHash) {
@@ -514,11 +613,33 @@
 					block2JsonEl.textContent = block2Json;
 					const block2Hash = await sha256(block2Json);
 					block2HashEl.textContent = block2Hash;
+					lastBlock2Hash = block2Hash;
 
 					const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
 					const prefix = '0'.repeat(difficulty);
 					const pow1Ok = currentBlockHash.startsWith(prefix);
 					const pow2Ok = block2Hash.startsWith(prefix);
+					// Block 3 (main chain)
+					const block3 = {
+						index: 3,
+						timestamp: block3Timestamp,
+						data: block3DataEl.value,
+						prevHash: block2Hash,
+						nonce: Number(block3NonceEl.value) || 0,
+					};
+					block3TimestampEl.textContent = block3Timestamp;
+					const block3Json = stableStringify(block3);
+					block3JsonEl.textContent = block3Json;
+					const block3Hash = await sha256(block3Json);
+					block3HashEl.textContent = block3Hash;
+					const pow3Ok = block3Hash.startsWith(prefix);
+					if (pow3Ok) {
+						pow3El.textContent = 'ok';
+						pow3El.className = 'ok';
+					} else {
+						pow3El.textContent = `need prefix ${prefix || '(none)'}`;
+						pow3El.className = 'bad';
+					}
 					if (block2Hash.startsWith(prefix)) {
 						pow2El.textContent = 'ok';
 						pow2El.className = 'ok';
@@ -579,6 +700,7 @@
 						block2AltJsonEl.textContent = block2AltJson;
 						const block2AltHash = await sha256(block2AltJson);
 						block2AltHashEl.textContent = block2AltHash;
+						lastBlock2AltHash = block2AltHash;
 
 						const pow2AltOk = block2AltHash.startsWith(prefix);
 						if (pow2AltOk) {
@@ -589,21 +711,48 @@
 							pow2AltEl.className = 'bad';
 						}
 
-						mainChainLenEl.textContent = '2';
-						forkChainLenEl.textContent = '2';
+						// Block 3' (fork chain)
+						const block3Alt = {
+							index: 3,
+							timestamp: block3AltTimestamp,
+							data: block3AltDataEl.value,
+							prevHash: block2AltHash,
+							nonce: Number(block3AltNonceEl.value) || 0,
+						};
+						block3AltTimestampEl.textContent = block3AltTimestamp;
+						const block3AltJson = stableStringify(block3Alt);
+						block3AltJsonEl.textContent = block3AltJson;
+						const block3AltHash = await sha256(block3AltJson);
+						block3AltHashEl.textContent = block3AltHash;
+						const pow3AltOk = block3AltHash.startsWith(prefix);
+						if (pow3AltOk) {
+							pow3AltEl.textContent = 'ok';
+							pow3AltEl.className = 'ok';
+						} else {
+							pow3AltEl.textContent = `need prefix ${prefix || '(none)'}`;
+							pow3AltEl.className = 'bad';
+						}
 
-						const mainValid = (!requireLink || linkedOk) && (!requirePow || (pow1Ok && pow2Ok));
-						const forkValid = (!requireLink || block2Alt.prevHash === currentBlockHash) && (!requirePow || (pow1Ok && pow2AltOk));
+						// Chain length + winner
+						const main2Valid = (!requireLink || linkedOk) && (!requirePow || (pow1Ok && pow2Ok));
+						const fork2Valid = (!requireLink || block2Alt.prevHash === currentBlockHash) && (!requirePow || (pow1Ok && pow2AltOk));
+						const main3Valid = main2Valid && (!requireLink || block3.prevHash === block2Hash) && (!requirePow || pow3Ok);
+						const fork3Valid = fork2Valid && (!requireLink || block3Alt.prevHash === block2AltHash) && (!requirePow || pow3AltOk);
 
-						if (!mainValid && !forkValid) {
-							winnerEl.textContent = 'none (both invalid)';
-							winnerEl.className = 'bad';
-						} else if (mainValid && !forkValid) {
+						const mainLen = main3Valid ? 3 : main2Valid ? 2 : 1;
+						const forkLen = fork3Valid ? 3 : fork2Valid ? 2 : 1;
+						mainChainLenEl.textContent = String(mainLen);
+						forkChainLenEl.textContent = String(forkLen);
+
+						if (mainLen > forkLen) {
 							winnerEl.textContent = 'main chain';
 							winnerEl.className = 'ok';
-						} else if (!mainValid && forkValid) {
+						} else if (forkLen > mainLen) {
 							winnerEl.textContent = 'fork chain';
 							winnerEl.className = 'ok';
+						} else if (mainLen === 1 && forkLen === 1) {
+							winnerEl.textContent = 'none (both invalid)';
+							winnerEl.className = 'bad';
 						} else {
 							winnerEl.textContent = 'tie (same length)';
 							winnerEl.className = '';
@@ -611,6 +760,10 @@
 					} else {
 						forkStatusEl.textContent = 'no fork';
 						forkStatusEl.className = '';
+						mainChainLenEl.textContent = '2';
+						forkChainLenEl.textContent = '2';
+						winnerEl.textContent = '(create fork)';
+						winnerEl.className = '';
 					}
 				} catch (err) {
 					hashEl.textContent = String(err);
@@ -624,6 +777,8 @@
 					pow2El.className = 'bad';
 					chainStatusEl.textContent = 'error';
 					chainStatusEl.className = 'bad';
+					winnerEl.textContent = 'error';
+					winnerEl.className = 'bad';
 				}
 			}
 
@@ -719,6 +874,96 @@
 				}
 			}
 
+			async function currentBlock3Json() {
+				const block3 = {
+					index: 3,
+					timestamp: block3Timestamp,
+					data: block3DataEl.value,
+					prevHash: lastBlock2Hash,
+					nonce: Number(block3NonceEl.value) || 0,
+				};
+				return stableStringify(block3);
+			}
+
+			async function mine3() {
+				if (mining3) return;
+				mining3 = true;
+				mine3Btn.disabled = true;
+				stopMine3Btn.disabled = false;
+
+				attempts3 = 0;
+				const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
+				const prefix = '0'.repeat(difficulty);
+
+				try {
+					let nonce = Math.max(0, Number(block3NonceEl.value) || 0);
+					while (mining3) {
+						block3NonceEl.value = String(nonce);
+						const block3Json = await currentBlock3Json();
+						const h3 = await sha256(block3Json);
+						attempts3 += 1;
+
+						if (h3.startsWith(prefix)) break;
+
+						nonce += 1;
+						if (attempts3 % 200 === 0) {
+							await refresh();
+							await new Promise((r) => setTimeout(r, 0));
+						}
+					}
+				} finally {
+					mining3 = false;
+					mine3Btn.disabled = false;
+					stopMine3Btn.disabled = true;
+					await refresh();
+				}
+			}
+
+			async function currentBlock3AltJson() {
+				const block3Alt = {
+					index: 3,
+					timestamp: block3AltTimestamp,
+					data: block3AltDataEl.value,
+					prevHash: lastBlock2AltHash,
+					nonce: Number(block3AltNonceEl.value) || 0,
+				};
+				return stableStringify(block3Alt);
+			}
+
+			async function mine3Alt() {
+				if (mining3Alt) return;
+				mining3Alt = true;
+				mine3AltBtn.disabled = true;
+				stopMine3AltBtn.disabled = false;
+
+				attempts3Alt = 0;
+				const difficulty = Math.max(0, Math.min(8, Number(difficultyEl.value) || 0));
+				const prefix = '0'.repeat(difficulty);
+
+				try {
+					let nonce = Math.max(0, Number(block3AltNonceEl.value) || 0);
+					while (mining3Alt) {
+						block3AltNonceEl.value = String(nonce);
+						const block3AltJson = await currentBlock3AltJson();
+						const h3Alt = await sha256(block3AltJson);
+						attempts3Alt += 1;
+
+						if (h3Alt.startsWith(prefix)) break;
+
+						nonce += 1;
+						if (attempts3Alt % 200 === 0) {
+							await refresh();
+							await new Promise((r) => setTimeout(r, 0));
+						}
+					}
+				} finally {
+					mining3Alt = false;
+					mine3AltBtn.disabled = false;
+					stopMine3AltBtn.disabled = true;
+					await refresh();
+				}
+			}
+
 			async function currentBlockJson() {
 				const nonce = Number(nonceEl.value) || 0;
 				const block = {
@@ -806,15 +1051,35 @@
 
 			block2AltDataEl.addEventListener('input', refresh);
 			block2AltNonceEl.addEventListener('input', refresh);
+			block3DataEl.addEventListener('input', refresh);
+			block3NonceEl.addEventListener('input', refresh);
+			block3AltDataEl.addEventListener('input', refresh);
+			block3AltNonceEl.addEventListener('input', refresh);
 
 			newBlock2AltTimestampBtn.addEventListener('click', () => {
 				block2AltTimestamp = new Date().toISOString();
+				refresh();
+			});
+			newBlock3TimestampBtn.addEventListener('click', () => {
+				block3Timestamp = new Date().toISOString();
+				refresh();
+			});
+			newBlock3AltTimestampBtn.addEventListener('click', () => {
+				block3AltTimestamp = new Date().toISOString();
 				refresh();
 			});
 
 			mine2AltBtn.addEventListener('click', mine2Alt);
 			stopMine2AltBtn.addEventListener('click', () => {
 				mining2Alt = false;
+			});
+			mine3Btn.addEventListener('click', mine3);
+			stopMine3Btn.addEventListener('click', () => {
+				mining3 = false;
+			});
+			mine3AltBtn.addEventListener('click', mine3Alt);
+			stopMine3AltBtn.addEventListener('click', () => {
+				mining3Alt = false;
 			});
 
 			mine2Btn.addEventListener('click', mine2);
