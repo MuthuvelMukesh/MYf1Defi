@@ -91,8 +91,10 @@ Mine the next block on one side of the fork.
 - If the main chain mines Block 3 first, main tends to win (more work)
 - If the fork mines Block 3′ first, the fork tends to win
 
+Tip: use **Reset demo** at the top if you want to quickly stop mining and start fresh.
+
 ## Next ideas (optional)
 
-- Replace “length” with “total work” (more realistic than longest-chain-by-count)
+- Add a “Reset to defaults” button (also resets the text fields)
 - Add transactions as an array and hash the Merkle root (later)
-- Add a “total work” score (not just length)
+- Replace the simple work proxy with a target/"bits" style difficulty (more realistic)

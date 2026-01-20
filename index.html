@@ -148,6 +148,10 @@
 				A blockchain is built from one simple tool: a <b>hash</b> (a one-way fingerprint of data).
 				Change the input even a little — the fingerprint changes a lot.
 			</p>
+			<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 16px">
+				<button id="resetDemoBtn" type="button">Reset demo</button>
+				<span class="hint" style="margin: 0">Stops mining and resets nonces/attempts/timestamps.</span>
+			</div>
 
 			<div class="card">
 				<label for="msg">Message (data we want to fingerprint)</label>
@@ -448,6 +452,7 @@
 		</div>
 
 		<script>
+			const resetDemoBtn = document.getElementById('resetDemoBtn');
 			const msgEl = document.getElementById('msg');
 			const hashEl = document.getElementById('hash');
 			const blockDataEl = document.getElementById('blockData');
@@ -540,6 +545,55 @@
 			let lastBlock2Hash = '';
 			let lastBlock2AltHash = '';
 			let forkActive = false;
+
+			function resetDemo() {
+				// Stop any in-flight mining loops.
+				mining = false;
+				mining2 = false;
+				mining2Alt = false;
+				mining3 = false;
+				mining3Alt = false;
+
+				// Reset UI controls that mining toggles.
+				mineBtn.disabled = false;
+				stopMineBtn.disabled = true;
+				mine2Btn.disabled = false;
+				stopMine2Btn.disabled = true;
+				mine2AltBtn.disabled = false;
+				stopMine2AltBtn.disabled = true;
+				mine3Btn.disabled = false;
+				stopMine3Btn.disabled = true;
+				mine3AltBtn.disabled = false;
+				stopMine3AltBtn.disabled = true;
+
+				// Reset counters + stored hash.
+				attempts = 0;
+				attempts2 = 0;
+				attempts2Alt = 0;
+				attempts3 = 0;
+				attempts3Alt = 0;
+				storedBlockHash = '';
+
+				// Reset timestamps so blocks are clearly “new”.
+				blockTimestamp = new Date().toISOString();
+				block2Timestamp = new Date().toISOString();
+				block2AltTimestamp = new Date().toISOString();
+				block3Timestamp = new Date().toISOString();
+				block3AltTimestamp = new Date().toISOString();
+
+				// Reset nonces.
+				nonceEl.value = '0';
+				block2NonceEl.value = '0';
+				block2AltNonceEl.value = '0';
+				block3NonceEl.value = '0';
+				block3AltNonceEl.value = '0';
+
+				// Collapse the fork UI.
+				forkActive = false;
+				forkContainer.style.display = 'none';
+
+				refresh();
+			}
 
 			function bytesToHex(buffer) {
 				const bytes = new Uint8Array(buffer);
@@ -1055,6 +1109,7 @@
 			prevHashEl.addEventListener('input', refresh);
 			nonceEl.addEventListener('input', refresh);
 			difficultyEl.addEventListener('input', refresh);
+			resetDemoBtn.addEventListener('click', resetDemo);
 			block2DataEl.addEventListener('input', refresh);
 			block2NonceEl.addEventListener('input', refresh);
 			newTimestampBtn.addEventListener('click', () => {
